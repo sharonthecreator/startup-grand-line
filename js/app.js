@@ -1,14 +1,15 @@
 /* Startup Grand Line — map engine.
-   Flat chart of a ring-shaped world: the Grand Line runs left→right, the Red Line crosses it twice
-   (Reverse Mountain on the left, Mary Geoise / Fish-Man Island in the middle) and wraps round at the right edge. */
+   Left to right: the home shore and Founders' Peak, the Home Waters (seven routes), the Market Wall
+   with one gate per route, the Global Waters, four beacons and Exit Island. */
 (() => {
   'use strict';
   const D = window.GL;
   const NS = 'http://www.w3.org/2000/svg';
   const W = 4800, H = 3000, MID = 1500;
   const BELT_T = [380, 560], BELT_B = [2440, 2620];
-  const RL1 = 400, RL2 = 2410, RL3 = 4720, RL_HW = 82;
-  const STAGE_X = [1060, 1460, 1860, 2980, 3460];
+  const COAST = 300, RL2 = 2250, RL_HW = 82;
+  const STAGE_X = [1120, 1500, 1880, 2700, 3200];
+  const coastX = y => COAST + (fbm(y / 260, 3, 3) - 0.5) * 140;
   const laneY = i => 720 + i * 268;
 
   const $ = id => document.getElementById(id);
@@ -57,25 +58,25 @@
     const ctx = c.getContext('2d'), img = ctx.createImageData(cw, ch), d = img.data;
     const band = (v, a, b, s) => sm(a - s, a + s, v) * (1 - sm(b - s, b + s, v));
     const mix = (p, q, t) => [p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t, p[2] + (q[2] - p[2]) * t];
-    const C = { east: [20, 98, 150], south: [16, 92, 138], north: [16, 66, 122], west: [22, 78, 134], para: [24, 126, 170], nw: [20, 90, 140], calm: [9, 44, 72] };
+    const C = { homeTop: [20, 98, 150], homeBot: [16, 92, 138], farTop: [16, 66, 122], farBot: [22, 78, 134], home: [24, 126, 170], glob: [20, 90, 140], calm: [9, 44, 72] };
     for (let py = 0; py < ch; py++) {
       const y = py * sc;
       const calm = Math.min(1, band(y, BELT_T[0], BELT_T[1], 26) + band(y, BELT_B[0], BELT_B[1], 26));
       const gl = band(y, BELT_T[1], BELT_B[0], 26);
       for (let px = 0; px < cw; px++) {
         const x = px * sc;
-        const para = sm(RL1 - 40, RL1 + 60, x) * (1 - sm(RL2 - 60, RL2 + 40, x));
-        const blue = y < MID ? mix(C.north, C.east, para) : mix(C.west, C.south, para);
-        const glc = mix(C.nw, C.para, para);
-        let col = mix(mix(blue, glc, gl), C.calm, calm);
+        const para = 1 - sm(RL2 - 60, RL2 + 40, x);
+        const outer = y < MID ? mix(C.farTop, C.homeTop, para) : mix(C.farBot, C.homeBot, para);
+        const glc = mix(C.glob, C.home, para);
+        let col = mix(mix(outer, glc, gl), C.calm, calm);
         const n1 = fbm(x / 760, y / 760, 3), n2 = fbm(x / 170 + 31, y / 170 + 17, 3);
         const ridge = 1 - Math.abs(2 * fbm(x / 230 + 7, y / 230 + 3, 3) - 1);
         const amp = 1 - 0.8 * calm;
         const light = ((n1 - 0.5) * 0.55 + (n2 - 0.5) * 0.2) * amp + calm * (fbm(x / 900, y / 30, 2) - 0.5) * 0.18;
         const caust = Math.pow(ridge, 14) * 30 * gl * (1 - calm);
         const e = Math.min(x, W - x, y, H - y) / 420, edge = 0.55 + 0.45 * sm(0, 1, e);
-        // the sea darkens into a trench along the foot of each Red Line
-        const trench = 1 - 0.25 * Math.max(...[RL1, RL2, RL3].map(r => 1 - sm(RL_HW, RL_HW + 160, Math.abs(x - r))));
+        // deep water along the foot of the Market Wall, turquoise shallows along the home shore
+        const trench = (1 - 0.25 * (1 - sm(RL_HW, RL_HW + 160, Math.abs(x - RL2)))) * (1 + 0.35 * (1 - sm(0, 260, x - COAST)));
         const k = (1 + light) * edge * trench, i = (py * cw + px) * 4;
         d[i] = col[0] * k + caust * 0.55; d[i + 1] = col[1] * k + caust * 0.9; d[i + 2] = col[2] * k + caust; d[i + 3] = 255;
       }
@@ -87,31 +88,30 @@
   /* ---------- nodes ---------- */
   const nodes = {};
   const node = (id, type, data, o) => (nodes[id] = Object.assign({ id, type, data }, o));
-  node('start', 'start', D.places.start, { x: 400, y: 1500, cx: 400, cy: 1500, sail: true });
-  node('twin', 'place', D.places.twin, { x: 740, y: 1500, cx: 690, cy: 1440, sail: true });
-  node('sabaody', 'place', D.places.sabaody, { x: 2230, y: 1500, cx: 2120, cy: 1500, sail: true });
-  node('fishman', 'place', D.places.fishman, { x: 2410, y: 1660, cx: 2410, cy: 1660, sail: true });
-  node('laughtale', 'laughtale', D.places.laughtale, { x: 4290, y: 1500, cx: 4440, cy: 1500, sail: true });
-  node('marijoa', 'place', D.places.marijoa, { cx: 2410, cy: 1185 });
-  node('redline', 'place', D.places.redline, { cx: RL2, cy: 900, zoom: 0.4 });
-  node('calm', 'place', D.places.calm, { cx: 1460, cy: 470, zoom: 0.45 });
-  node('paradise', 'place', D.places.paradise, { cx: 1300, cy: 1500, zoom: 0.3 });
-  node('newworld', 'place', D.places.newworld, { cx: 3500, cy: 1500, zoom: 0.3 });
-  const BLUE_POS = { east: [1450, 190], south: [1450, 2810], north: [3560, 190], west: [3560, 2810] };
-  D.blues.forEach(b => node(`blue-${b.id}`, 'blue', b, { cx: BLUE_POS[b.id][0], cy: BLUE_POS[b.id][1], zoom: 0.4 }));
+  node('start', 'start', D.places.start, { x: 660, y: 1500, cx: 250, cy: 1500, sail: true });
+  node('lighthouse', 'place', D.places.lighthouse, { cx: 720, cy: 1320 });
+  node('exit', 'exit', D.places.exit, { x: 4250, y: 1500, cx: 4420, cy: 1500, sail: true });
+  node('wall', 'place', D.places.wall, { cx: RL2, cy: 1500, zoom: 0.4 });
+  node('doldrums', 'place', D.places.doldrums, { cx: 1500, cy: 470, zoom: 0.45 });
+  node('home', 'place', D.places.home, { cx: 1400, cy: 1500, zoom: 0.3 });
+  node('global', 'place', D.places.global, { cx: 3300, cy: 1500, zoom: 0.3 });
+  node('reach-us', 'reach', D.places.us, { cx: 3500, cy: 190, zoom: 0.4 });
+  node('reach-far', 'reach', D.places.far, { cx: 3500, cy: 2810, zoom: 0.4 });
+  const SEA_POS = { service: [895, 190], engineers: [1745, 190], scholars: [895, 2810], returning: [1745, 2810] };
+  D.seas.forEach(b => node(`sea-${b.id}`, 'sea', b, { cx: SEA_POS[b.id][0], cy: SEA_POS[b.id][1], zoom: 0.4 }));
   D.lanes.forEach((lane, i) => lane.islands.forEach((isl, k) => {
     const r = 46 + k * 7;
     const x = STAGE_X[k] + Math.sin(i * 12.9 + k * 78.2) * 42;
     const y = laneY(i) + Math.cos(i * 4.1 + k * 9.7) * 28;
     node(`${lane.id}-${k}`, 'island', isl, { lane, li: i, k, x, y, cx: x, cy: y - r - 22, r, sail: true });
   }));
-  // Road Poneglyphs sit in the gaps between the converging New World routes.
-  const LT = nodes.laughtale;
+  // Four beacons sit in the gaps between the routes converging on Exit Island.
+  const LT = nodes.exit;
   const bez = (a, t) => { const dx = (LT.x - a.x) / 2, u = 1 - t; return { x: u * u * u * a.x + 3 * u * u * t * (a.x + dx) + 3 * u * t * t * (LT.x - dx) + t * t * t * LT.x, y: u * u * u * a.y + 3 * u * u * t * a.y + 3 * u * t * t * LT.y + t * t * t * LT.y }; };
   [[0, 1, 0.3], [2, 3, 0.5], [3, 4, 0.22], [5, 6, 0.5]].forEach(([a, b, t], j) => {
     const p = bez(nodes[`${D.lanes[a].id}-4`], t), q = bez(nodes[`${D.lanes[b].id}-4`], t);
-    const pg = Object.assign({}, D.poneglyphs[j], { name: D.poneglyphs[j].title, lore: D.poneglyphLore });
-    node(`pg-${j}`, 'poneglyph', pg, { cx: (p.x + q.x) / 2, cy: (p.y + q.y) / 2 - 10, j });
+    const bc = Object.assign({}, D.beacons[j], { name: D.beacons[j].title });
+    node(`bc-${j}`, 'beacon', bc, { cx: (p.x + q.x) / 2, cy: (p.y + q.y) / 2 - 10, j });
   });
 
   /* ---------- layers ---------- */
@@ -126,8 +126,7 @@
       <path d="M250 190 q18 -14 36 0" fill="none" stroke="#dff6ff" stroke-opacity=".06" stroke-width="4" stroke-linecap="round"/>
     </pattern>
     <pattern id="strata" width="140" height="28" patternUnits="userSpaceOnUse">
-      <path d="M0 14 Q35 5 70 14 T140 14" fill="none" stroke="#2a0906" stroke-opacity=".28" stroke-width="3"/>
-      <path d="M0 24 Q35 20 70 25 T140 23" fill="none" stroke="#ffd3c4" stroke-opacity=".08" stroke-width="2"/>
+      <path d="M0 0 H140 M0 14 H140 M35 0 V14 M105 0 V14 M0 28 H140 M70 14 V28" fill="none" stroke="#14161c" stroke-opacity=".3" stroke-width="2"/>
     </pattern>
     <clipPath id="windy">
       <rect x="-600" y="-600" width="${W + 1200}" height="${BELT_T[0] + 600}"/>
@@ -139,7 +138,8 @@
     <linearGradient id="goldSand" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff6c2"/><stop offset=".6" stop-color="#ffd76a"/><stop offset="1" stop-color="#d49a2a"/></linearGradient>
     <linearGradient id="grassG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9be27c"/><stop offset=".55" stop-color="#55ad5a"/><stop offset="1" stop-color="#2d7442"/></linearGradient>
     <linearGradient id="hillG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7fcb68"/><stop offset="1" stop-color="#2a6537"/></linearGradient>
-    <linearGradient id="cliffG" x1="0" x2="1"><stop offset="0" stop-color="#3d110e"/><stop offset=".16" stop-color="#8a3027"/><stop offset=".45" stop-color="#c25a46"/><stop offset=".6" stop-color="#b14d3d"/><stop offset=".86" stop-color="#7c2a22"/><stop offset="1" stop-color="#330d0b"/></linearGradient>
+    <linearGradient id="cliffG" x1="0" x2="1"><stop offset="0" stop-color="#22252e"/><stop offset=".16" stop-color="#4c5160"/><stop offset=".45" stop-color="#8a8f9e"/><stop offset=".6" stop-color="#7a7f8e"/><stop offset=".86" stop-color="#454956"/><stop offset="1" stop-color="#1c1e26"/></linearGradient>
+    <linearGradient id="landG" x1="0" x2="1"><stop offset="0" stop-color="#2f6b3c"/><stop offset=".7" stop-color="#5aa35a"/><stop offset="1" stop-color="#7cc06a"/></linearGradient>
     <linearGradient id="shade" x1="0" y1="0" x2="1" y2="1"><stop offset=".4" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".45"/></linearGradient>
     <linearGradient id="calmG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#cfefff" stop-opacity=".07"/><stop offset=".5" stop-color="#cfefff" stop-opacity="0"/><stop offset="1" stop-color="#cfefff" stop-opacity=".07"/></linearGradient>
     <radialGradient id="gold"><stop offset="0" stop-color="#fff3b0" stop-opacity=".9"/><stop offset=".45" stop-color="#ffd166" stop-opacity=".4"/><stop offset="1" stop-color="#ffb84d" stop-opacity="0"/></radialGradient>
@@ -213,55 +213,54 @@
     n.el = g; return g;
   };
 
-  /* ---------- decor: calm belts, blues, currents ---------- */
+  /* ---------- decor: doldrums, origin seas, currents ---------- */
   [BELT_T, BELT_B].forEach(([a, b]) => {
-    const g = S('g', { class: 'belt hit', 'data-node': 'calm' }, gDecor);
+    const g = S('g', { class: 'belt hit', 'data-node': 'doldrums' }, gDecor);
     S('rect', { x: -600, y: a, width: W + 1200, height: b - a, fill: 'url(#calmG)' }, g);
     [a, b].forEach(y => S('line', { x1: -600, x2: W + 600, y1: y, y2: y, class: 'belt-edge' }, g));
   });
-  nodes.calm.el = gDecor.querySelector('.belt');
+  nodes.doldrums.el = gDecor.querySelector('.belt');
 
-  // the four Blues: a big clickable sea each, with a few small islands
-  const BLUE_AREAS = { east: [[RL1 + RL_HW, 0, RL2 - RL1 - 2 * RL_HW, BELT_T[0]]], south: [[RL1 + RL_HW, BELT_B[1], RL2 - RL1 - 2 * RL_HW, H - BELT_B[1]]],
-    north: [[RL2 + RL_HW, 0, RL3 - RL2 - 2 * RL_HW, BELT_T[0]], [-600, 0, 600 + RL1 - RL_HW, BELT_T[0]]], west: [[RL2 + RL_HW, BELT_B[1], RL3 - RL2 - 2 * RL_HW, H - BELT_B[1]], [-600, BELT_B[1], 600 + RL1 - RL_HW, H - BELT_B[1]]] };
-  D.blues.forEach((b, bi) => {
-    const n = nodes[`blue-${b.id}`];
-    const g = nodeGroup(n, gDecor, `${b.name}: ${b.origin}`, { 'data-node': n.id });
+  // the four origin seas (home side) and the two global markets (far side): big clickable seas with small islands
+  const HX = [COAST + 120, 1320, RL2 - RL_HW], FX = [RL2 + RL_HW, W + 600];
+  const AREAS = { 'sea-service': [HX[0], 0, HX[1] - HX[0], BELT_T[0]], 'sea-engineers': [HX[1], 0, HX[2] - HX[1], BELT_T[0]],
+    'sea-scholars': [HX[0], BELT_B[1], HX[1] - HX[0], H - BELT_B[1]], 'sea-returning': [HX[1], BELT_B[1], HX[2] - HX[1], H - BELT_B[1]],
+    'reach-us': [FX[0], 0, FX[1] - FX[0], BELT_T[0]], 'reach-far': [FX[0], BELT_B[1], FX[1] - FX[0], H - BELT_B[1]] };
+  Object.entries(AREAS).forEach(([id, [x, y, w, h]], bi) => {
+    const n = nodes[id], d = n.data;
+    const g = nodeGroup(n, gDecor, `${d.name}: ${d.origin || d.tagline}`, { 'data-node': id });
     const rand = rng(200 + bi);
-    BLUE_AREAS[b.id].forEach(([x, y, w, h]) => {
-      S('rect', { x, y, width: w, height: h, fill: 'transparent' }, g);
-      for (let t = 0; t < Math.round(w / 420); t++) {
-        const ix = x + 80 + rand() * (w - 160), iy = y + 70 + rand() * (h - 140);
-        if (Math.abs(ix - n.cx) < 430 && Math.abs(iy - n.cy) < 90) continue;
-        isle(g, ix, iy, 18 + rand() * 16, rand, { palms: 1 + Math.floor(rand() * 2) });
-      }
-    });
-    S('text', { class: 'blue-name', x: n.cx, y: n.cy + 10 }, g).textContent = b.name.toUpperCase();
-    S('text', { class: 'blue-sub', x: n.cx, y: n.cy + 52 }, g).textContent = `${b.origin} · founder origin`;
-    if (b.id === 'north' || b.id === 'west') S('text', { class: 'blue-sub', x: 160, y: n.cy + 18 }, g).textContent = b.name.toUpperCase();
+    S('rect', { x, y, width: w, height: h, fill: 'transparent' }, g);
+    for (let t = 0; t < Math.round(Math.min(w, 2400) / 380); t++) {
+      const ix = x + 80 + rand() * (Math.min(w, 2400) - 160), iy = y + 70 + rand() * (h - 140);
+      if (Math.abs(ix - n.cx) < 400 && Math.abs(iy - n.cy) < 90) continue;
+      isle(g, ix, iy, 18 + rand() * 16, rand, { palms: 1 + Math.floor(rand() * 2) });
+    }
+    S('text', { class: 'sea-name', x: n.cx, y: n.cy + 10 }, g).textContent = d.name.toUpperCase();
+    S('text', { class: 'sea-sub', x: n.cx, y: n.cy + 52 }, g).textContent = d.origin ? `${d.origin} · founder origin` : d.tagline;
   });
 
-  // the four currents climbing Reverse Mountain, running along the foot of the Red Line
+  // the four currents from the origin seas, running along the home shore into the harbour below Founders' Peak
   const CURRENTS = [
-    'M1150,190 C760,190 535,250 528,560 L522,1080 Q520,1230 515,1300',
-    'M20,190 C150,205 276,290 276,560 L282,1080 Q284,1230 285,1300',
-    'M1150,2810 C760,2810 535,2750 528,2440 L522,1920 Q520,1770 515,1700',
-    'M20,2810 C150,2795 276,2710 276,2440 L282,1920 Q284,1770 285,1700'];
+    'M1150,215 C760,215 430,250 420,560 L420,1150 Q420,1370 620,1450',
+    'M2050,320 C1500,320 540,300 525,600 L525,1180 Q525,1380 660,1468',
+    'M1150,2785 C760,2785 430,2750 420,2440 L420,1850 Q420,1630 620,1550',
+    'M2050,2680 C1500,2680 540,2700 525,2400 L525,1820 Q525,1620 660,1532'];
   CURRENTS.forEach(d => { S('path', { class: 'current', d }, gDecor); S('path', { class: 'current-flow', d }, gDecor); });
 
-  // region titles in the top Calm Belt; stage marks in the bottom one
-  [['paradise', 1460, 'PARADISE', 'first half of the Grand Line · one-needle Log Pose'], ['newworld', 3500, 'NEW WORLD', 'second half of the Grand Line · three-needle Log Pose']].forEach(([id, x, t, s]) => {
+  // region titles in the top doldrums; stage marks in the bottom one
+  [['home', 1500, 'HOME WATERS', 'seven routes · Pre-Seed to Series A'], ['global', 3250, 'GLOBAL WATERS', 'beyond the Market Wall · growth to exit']].forEach(([id, x, t, s]) => {
     const g = nodeGroup(nodes[id], gDecor, nodes[id].data.name, { 'data-node': id });
     S('text', { class: 'region', x, y: 486 }, g).textContent = t;
     S('text', { class: 'region-sub', x, y: 530 }, g).textContent = s;
   });
-  [[820, 482], [4180, 482], [640, 2540], [4180, 2540]].forEach(([x, y]) => { S('text', { class: 'belt-name', x, y, 'data-node': 'calm' }, gDecor).textContent = 'CALM BELT'; });
+  [[620, 482], [4300, 482], [640, 2540], [4300, 2540]].forEach(([x, y]) => { S('text', { class: 'belt-name', x, y, 'data-node': 'doldrums' }, gDecor).textContent = 'DOLDRUMS'; });
   D.stages.forEach((st, k) => {
     S('text', { class: 'stagehead', x: STAGE_X[k], y: 2545 }, gDecor).textContent = st.name.toUpperCase();
     S('text', { class: 'stagehead-sub', x: STAGE_X[k], y: 2578 }, gDecor).textContent = `stage ${k + 1} · ${st.sea}`;
   });
 
-  // Sea Kings sleeping in the Calm Belts
+  // sea serpents sleeping in the doldrums
   function seaKing(x, y, s, flip, seed) {
     const o = S('g', { class: 'seaking', transform: `translate(${x},${y}) scale(${flip ? -s : s},${s})` }, gDecor);
     const g = S('g', { class: 'sk', style: `animation-delay:${-seed}s` }, o);
@@ -274,8 +273,20 @@
     S('circle', { cx: 100, cy: -4, r: 3.5, fill: '#ffd166' }, g);
     S('path', { d: 'M-96,0 L-122,-16 L-116,0 L-122,16Z', fill: '#2a5a4c', stroke: '#13332a', 'stroke-width': 2 }, g);
   }
-  seaKing(2050, 470, 1, false, 1); seaKing(2790, 468, 0.9, true, 3); seaKing(4470, 470, 0.8, false, 5);
-  seaKing(1260, 2588, 0.9, true, 2); seaKing(2200, 2580, 1.1, false, 4); seaKing(3220, 2590, 0.9, true, 6); seaKing(3980, 2582, 1, false, 7);
+  seaKing(2350, 470, 1, false, 1); seaKing(3950, 468, 0.9, true, 3); seaKing(4620, 470, 0.8, false, 5);
+  seaKing(1300, 2588, 0.9, true, 2); seaKing(2250, 2580, 1.1, false, 4); seaKing(2950, 2590, 0.9, true, 6); seaKing(3900, 2582, 1, false, 7);
+
+  // leviathans (the giants of the global market) cruising the Global Waters
+  function whale(x, y, s, flip) {
+    const o = S('g', { class: 'whale', transform: `translate(${x},${y}) scale(${flip ? -s : s},${s})` }, gDecor);
+    const g = S('g', { class: 'sk' }, o);
+    S('ellipse', { cx: 0, cy: 8, rx: 120, ry: 40, fill: 'none', stroke: '#e8fbff', 'stroke-opacity': 0.18, 'stroke-width': 3 }, g);
+    S('path', { d: 'M-90,0 C-70,-32 50,-36 90,-6 C100,2 96,12 86,16 C40,34 -60,30 -90,0Z', fill: '#24465e', stroke: '#0f2333', 'stroke-width': 3 }, g);
+    S('path', { d: 'M-88,0 L-130,-22 L-118,0 L-130,22Z', fill: '#24465e', stroke: '#0f2333', 'stroke-width': 3 }, g);
+    S('path', { d: 'M-40,-14 C0,-24 40,-22 70,-8', fill: 'none', stroke: '#6f93ab', 'stroke-width': 4, 'stroke-linecap': 'round', opacity: 0.7 }, g);
+    S('circle', { cx: 62, cy: -2, r: 4, fill: '#cfe9f5' }, g);
+  }
+  whale(3000, 1100, 0.9, false); whale(3750, 2250, 1.1, true); whale(3700, 700, 0.8, true);
 
   /* ---------- routes ---------- */
   const edges = new Map(), adj = {};
@@ -289,143 +300,113 @@
     (adj[a] = adj[a] || []).push(b);
     (adj[b] = adj[b] || []).push(a);
   }
-  addEdge('start', 'twin', 'ghost', '', '', 'M400,1500 C500,1492 580,1508 740,1500');
-  addEdge('sabaody', 'fishman', 'ghost', '', '', 'M2230,1500 C2310,1500 2330,1660 2410,1660');
-  D.lanes.forEach(lane => {
+  D.lanes.forEach((lane, i) => {
     const id = k => `${lane.id}-${k}`;
-    addEdge('twin', id(0), 'route', lane.id, lane.color);
+    addEdge('start', id(0), 'route', lane.id, lane.color);
     addEdge(id(0), id(1), 'route', lane.id, lane.color);
     addEdge(id(1), id(2), 'route', lane.id, lane.color);
-    addEdge(id(2), 'sabaody', 'route', lane.id, lane.color);
-    addEdge('fishman', id(3), 'route', lane.id, lane.color);
+    const A = nodes[id(2)], B = nodes[id(3)], G = { x: RL2, y: laneY(i) };
+    addEdge(id(2), id(3), 'route', lane.id, lane.color, `M${f1(A.x)},${f1(A.y)} ${curve(A, G)} ${curve(G, B)}`);
     addEdge(id(3), id(4), 'route', lane.id, lane.color);
-    addEdge(id(4), 'laughtale', 'route', lane.id, lane.color);
+    addEdge(id(4), 'exit', 'route', lane.id, lane.color);
   });
   D.crossovers.forEach(c => {
     c.a = `${c.from[0]}-${c.from[1]}`; c.b = `${c.to[0]}-${c.to[1]}`;
     addEdge(c.a, c.b, 'cross', `${c.from[0]} ${c.to[0]}`);
   });
 
-  /* ---------- the Red Line ---------- */
-  function redLine(x0, seed) {
-    const g = S('g', { class: 'redline hit', 'data-node': 'redline' }, gRock);
+  /* ---------- the home shore ---------- */
+  (() => {
+    const pts = []; for (let y = -700; y <= H + 700; y += 30) pts.push([coastX(y), y]);
+    const poly = off => [`-900,-700`, ...pts.map(([x, y]) => `${f1(x + off)},${y}`), `-900,${H + 700}`].join(' ');
+    S('polygon', { points: poly(40), fill: '#bff3ef', opacity: 0.35 }, gRock);
+    S('polygon', { points: poly(18), fill: 'url(#sandG)' }, gRock);
+    S('polygon', { points: poly(0), fill: 'url(#landG)', stroke: '#2a5a32', 'stroke-width': 2 }, gRock);
+    const r = rng(61);
+    for (let i = 0; i < 26; i++) { const y = r() * H, x = coastX(y) - 40 - r() * 220; if (Math.abs(y - MID) > 330) palm(gRock, x, y, 11 + r() * 6, r); }
+    [[150, 600], [170, 2400]].forEach(([x, y]) => { // coastal towns
+      for (let h = 0; h < 7; h++) house(gRock, x + (h % 4) * 22 - 40, y + Math.floor(h / 4) * 22, 16, 13, '#d9663f');
+    });
+    [700, 2300].forEach(y => S('text', { class: 'shore-name', transform: `translate(90,${y}) rotate(-90)` }, gRock).textContent = 'THE HOME SHORE');
+  })();
+
+  /* ---------- the Market Wall, with one lock gate per route ---------- */
+  (() => {
+    const g = S('g', { class: 'redline hit', 'data-node': 'wall' }, gRock);
+    nodes.wall.el = g;
     const edge = (hw, jit, s2) => {
       const Lp = [], Rp = [];
       for (let y = -700; y <= H + 700; y += 34) {
-        Lp.push(`${f1(x0 - hw - (fbm(y / 130, seed + s2, 3) - 0.5) * jit * 2)},${y}`);
-        Rp.unshift(`${f1(x0 + hw + (fbm(y / 130, seed + s2 + 40, 3) - 0.5) * jit * 2)},${y}`);
+        Lp.push(`${f1(RL2 - hw - (fbm(y / 130, 11 + s2, 3) - 0.5) * jit * 2)},${y}`);
+        Rp.unshift(`${f1(RL2 + hw + (fbm(y / 130, 51 + s2, 3) - 0.5) * jit * 2)},${y}`);
       }
       return Lp.concat(Rp).join(' ');
     };
-    S('polygon', { points: edge(RL_HW + 26, 30, 0), fill: '#e9fbff', opacity: 0.3 }, g);
-    S('polygon', { points: edge(RL_HW, 30, 0), fill: '#020f1a', opacity: 0.35, transform: 'translate(30,14)' }, g);
-    S('polygon', { points: edge(RL_HW, 30, 0), fill: 'url(#cliffG)', stroke: '#2a0806', 'stroke-width': 3 }, g);
-    S('polygon', { points: edge(RL_HW - 18, 22, 9), fill: 'url(#strata)' }, g);
-    S('polygon', { points: edge(18, 14, 21), fill: '#e08a6c', opacity: 0.28 }, g);
-    [190, 2810].forEach(y => S('text', { class: 'rl-name', transform: `translate(${x0 + 12},${y}) rotate(90)` }, g).textContent = 'RED LINE');
-    return g;
-  }
-  redLine(RL1, 3); nodes.redline.el = redLine(RL2, 11); redLine(RL3, 17);
+    S('polygon', { points: edge(RL_HW + 24, 18, 0), fill: '#e9fbff', opacity: 0.3 }, g);
+    S('polygon', { points: edge(RL_HW, 18, 0), fill: '#020f1a', opacity: 0.35, transform: 'translate(30,14)' }, g);
+    S('polygon', { points: edge(RL_HW, 18, 0), fill: 'url(#cliffG)', stroke: '#14161c', 'stroke-width': 3 }, g);
+    S('polygon', { points: edge(RL_HW - 16, 10, 9), fill: 'url(#strata)' }, g);
+    D.lanes.forEach((lane, i) => {
+      const y = laneY(i);
+      S('rect', { x: RL2 - RL_HW - 26, y: y - 34, width: 2 * RL_HW + 52, height: 68, fill: '#1c7aa6', stroke: '#14161c', 'stroke-width': 3 }, g);
+      S('rect', { x: RL2 - RL_HW - 26, y: y - 34, width: 2 * RL_HW + 52, height: 68, fill: 'url(#wavep)' }, g);
+      [-44, 44].forEach(dx => {
+        S('rect', { x: RL2 + dx - 5, y: y - 34, width: 10, height: 22, fill: '#6b4a26', stroke: '#2e1a0b', 'stroke-width': 1.5 }, g);
+        S('rect', { x: RL2 + dx - 5, y: y + 12, width: 10, height: 22, fill: '#6b4a26', stroke: '#2e1a0b', 'stroke-width': 1.5 }, g);
+      });
+      [[-RL_HW - 26, -34], [RL_HW + 26, -34], [-RL_HW - 26, 34], [RL_HW + 26, 34]].forEach(([dx, dy]) => {
+        S('circle', { cx: RL2 + dx, cy: y + dy, r: 12, fill: '#a7abb8', stroke: '#14161c', 'stroke-width': 2.5 }, g);
+        S('circle', { cx: RL2 + dx, cy: y + dy, r: 5, fill: lane.color }, g);
+      });
+    });
+    [190, 2810].forEach(y => S('text', { class: 'rl-name', transform: `translate(${RL2 + 12},${y}) rotate(90)` }, g).textContent = 'MARKET WALL');
+  })();
 
-  /* ---------- Reverse Mountain ---------- */
+  /* ---------- Founders' Peak ---------- */
   (() => {
     const n = nodes.start, cx = n.cx, cy = n.cy, r = rng(99);
-    const g = nodeGroup(n, gRock, 'Reverse Mountain, where the four Blues meet');
-    S('circle', { class: 'ring', cx, cy, r: 300 }, g);
-    const base = blob(cx, cy, 255, r, 14, 0.16);
-    S('path', { d: base, fill: '#020f1a', opacity: 0.4, transform: 'translate(26,22)' }, g);
-    S('path', { d: base, fill: '#5b2620', stroke: '#2a0b08', 'stroke-width': 4 }, g);
-    [[205, '#783428'], [158, '#964534'], [112, '#b25a44'], [70, '#cd7a5f']].forEach(([rr, c]) => S('path', { d: blob(cx - (255 - rr) * 0.06, cy - (255 - rr) * 0.08, rr, r, 12, 0.2), fill: c }, g));
+    const g = nodeGroup(n, gRock, 'Founders’ Peak, the starting point');
+    S('circle', { class: 'ring', cx: n.x - 120, cy, r: 200 }, g);
+    const base = blob(cx, cy, 245, r, 14, 0.16);
+    S('path', { d: base, fill: '#06301a', opacity: 0.35, transform: 'translate(22,20)' }, g);
+    S('path', { d: base, fill: '#4f7a3e', stroke: '#2a4a22', 'stroke-width': 4 }, g);
+    [[200, '#6b7f4a'], [155, '#87845a'], [110, '#9c8a68'], [68, '#b3a08a']].forEach(([rr, c]) => S('path', { d: blob(cx - (245 - rr) * 0.06, cy - (245 - rr) * 0.08, rr, r, 12, 0.2), fill: c }, g));
     S('path', { d: base, fill: 'url(#shade)' }, g);
-    // four canals carrying the Blues up to the summit, one canal down into the Grand Line
-    const canals = ['M515,1300 Q470,1420 400,1500', 'M285,1300 Q330,1420 400,1500', 'M515,1700 Q470,1580 400,1500', 'M285,1700 Q330,1580 400,1500', 'M400,1500 C480,1490 560,1510 660,1500'];
-    canals.forEach(d => { S('path', { d, class: 'canal' }, g); S('path', { d, class: 'canal-flow' }, g); });
-    S('path', { d: blob(cx - 6, cy - 8, 40, r, 9, 0.35), fill: 'url(#snowG)' }, g);
-    S('circle', { cx, cy, r: 20, fill: 'url(#pool)', stroke: '#fff', 'stroke-width': 3 }, g);
-    labels(g, cx, cy + 320, 'Reverse Mountain', 'where the four Blues meet', true);
+    S('path', { d: blob(cx - 6, cy - 8, 42, r, 9, 0.35), fill: 'url(#snowG)' }, g);
+    // the climb: a winding trail from the harbour to the summit
+    S('path', { class: 'trail', d: `M${n.x - 40},${cy + 30} C430,1620 470,1560 400,1530 S330,1640 300,1580 S350,1470 290,1460 S220,1540 ${cx},${cy}` }, g);
+    S('path', { d: `M${cx},${cy} v-46`, stroke: '#3a2614', 'stroke-width': 4 }, g);
+    S('path', { d: `M${cx},${cy - 46} l30,9 l-30,10Z`, fill: '#ff5a5f', stroke: '#3a2614', 'stroke-width': 1.5 }, g);
+    // harbour quay where the ship waits
+    S('path', { d: `M${n.x - 110},${cy - 40} q60,-10 90,0 v80 q-30,10 -90,0Z`, fill: '#8a5a2b', stroke: '#2e1a0b', 'stroke-width': 2 }, g);
+    labels(g, cx + 40, cy + 300, 'Founders’ Peak', 'every voyage starts with a climb', true);
   })();
 
   /* ---------- places ---------- */
-  // Twin Capes + lighthouse
+  // Launch Lighthouse on a small cape north of the harbour
   (() => {
-    const n = nodes.twin, r = rng(12);
-    const g = nodeGroup(n, gPlaces, 'Twin Capes lighthouse');
-    S('circle', { class: 'ring', cx: n.cx, cy: n.cy, r: 70 }, g);
-    isle(g, 690, 1430, 44, r, { palms: 2 });
-    isle(g, 692, 1578, 38, r, { palms: 3 });
-    const lh = S('g', { transform: 'translate(682,1418)' }, g);
+    const n = nodes.lighthouse, r = rng(12);
+    const g = nodeGroup(n, gPlaces, 'Launch Lighthouse');
+    S('circle', { class: 'ring', cx: n.cx, cy: n.cy, r: 66 }, g);
+    isle(g, n.cx, n.cy, 44, r, { palms: 2 });
+    const lh = S('g', { transform: `translate(${n.cx - 6},${n.cy - 10})` }, g);
     S('path', { class: 'beam', d: 'M0,0 L300,-36 A302,302 0 0 1 300,36 Z', fill: 'url(#beam)' }, lh);
     S('circle', { r: 15, fill: '#fff', stroke: '#3b2a1a', 'stroke-width': 2 }, lh);
     S('circle', { r: 10, fill: '#d9443c' }, lh);
     S('circle', { r: 5, fill: '#ffe38a' }, lh);
-    labels(g, 690, 1690, 'Twin Capes', 'the lighthouse');
+    labels(g, n.cx, n.cy - 78, 'Launch Lighthouse', 'incubators · grants');
   })();
 
-  // Sabaody: giant mangroves and rising bubbles
+  // Exit Island
   (() => {
-    const n = nodes.sabaody, r = rng(31), cx = n.cx, cy = n.cy;
-    const g = nodeGroup(n, gPlaces, 'Sabaody Archipelago, where the seven routes meet');
-    S('circle', { class: 'ring', cx, cy, r: 160 }, g);
-    S('path', { d: blob(cx, cy, 175, r, 12, 0.2), fill: 'url(#shallow)' }, g);
-    const trees = [[0, 0, 46], [-80, -60, 36], [70, -70, 38], [-95, 45, 34], [75, 60, 40], [-10, -105, 30], [10, 100, 32], [-140, -5, 26], [130, 0, 28]];
-    trees.forEach(([dx, dy, tr]) => {
-      const x = cx + dx, y = cy + dy;
-      S('circle', { cx: x + 8, cy: y + 10, r: tr * 1.1, fill: '#03203a', opacity: 0.3 }, g);
-      S('circle', { cx: x, cy: y, r: tr * 1.22, fill: 'none', stroke: '#6b4a2b', 'stroke-width': 6, 'stroke-dasharray': '4 7' }, g);
-      S('path', { d: blob(x, y, tr, r, 9, 0.3), fill: 'url(#grassG)', stroke: '#24603a', 'stroke-width': 2 }, g);
-      S('ellipse', { cx: x - tr * 0.3, cy: y - tr * 0.3, rx: tr * 0.35, ry: tr * 0.2, fill: '#d8f7b8', opacity: 0.35 }, g);
-    });
-    for (let i = 0; i < 16; i++) {
-      const a = r() * 6.28, d = 30 + r() * 140, br = 7 + r() * 16;
-      S('circle', { class: 'bubble', cx: f1(cx + Math.cos(a) * d), cy: f1(cy + Math.sin(a) * d), r: f1(br), fill: 'url(#bubbleG)', stroke: '#e6fdff', 'stroke-opacity': 0.7, 'stroke-width': 1.5, style: `animation-delay:${f1(-r() * 6)}s;animation-duration:${f1(4 + r() * 4)}s` }, g);
-    }
-    labels(g, cx, cy + 205, 'Sabaody Archipelago', 'the seven routes meet');
-  })();
-
-  // Mary Geoise on top of the wall
-  (() => {
-    const n = nodes.marijoa, cx = n.cx, cy = n.cy;
-    const g = nodeGroup(n, gPlaces, 'Mary Geoise, the route over the Red Line');
-    S('circle', { class: 'ring', cx, cy, r: 90 }, g);
-    [-1, 1].forEach(s => S('path', { d: `M${cx},${cy + s * 60} L${cx},${cy + s * 230}`, stroke: '#f2e6c8', 'stroke-width': 5, 'stroke-dasharray': '6 9', opacity: 0.7 }, g));
-    S('circle', { cx: cx + 8, cy: cy + 10, r: 66, fill: '#1a0503', opacity: 0.35 }, g);
-    S('circle', { cx, cy, r: 66, fill: '#e8dcc6', stroke: '#8a6a3a', 'stroke-width': 3 }, g);
-    S('circle', { cx, cy, r: 50, fill: '#fffaf0', stroke: '#c9a24a', 'stroke-width': 4 }, g);
-    S('circle', { cx, cy, r: 36, fill: '#f3ead8', stroke: '#d8c7a6', 'stroke-width': 2, 'stroke-dasharray': '3 4' }, g);
-    for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2 + Math.PI / 4; S('circle', { cx: f1(cx + Math.cos(a) * 50), cy: f1(cy + Math.sin(a) * 50), r: 11, fill: '#fffaf0', stroke: '#8a6a3a', 'stroke-width': 2 }, g); S('circle', { cx: f1(cx + Math.cos(a) * 50), cy: f1(cy + Math.sin(a) * 50), r: 5, fill: '#f2c94c' }, g); }
-    S('circle', { cx, cy, r: 20, fill: '#f2c94c', stroke: '#9a7420', 'stroke-width': 2.5 }, g);
-    S('circle', { cx: cx - 6, cy: cy - 6, r: 7, fill: '#fff6cf' }, g);
-    labels(g, cx + 200, cy - 2, 'Mary Geoise', 'over the wall');
-  })();
-
-  // Fish-Man Island, seen through the rock
-  (() => {
-    const n = nodes.fishman, cx = n.cx, cy = n.cy, r = rng(77);
-    const g = nodeGroup(n, gPlaces, 'Fish-Man Island, 10,000 metres beneath the Red Line');
-    S('circle', { cx, cy, r: 170, fill: 'url(#fmiG)' }, g);
-    S('circle', { cx, cy, r: 108, fill: '#08557f', opacity: 0.8, stroke: '#a8f4ff', 'stroke-width': 4 }, g);
-    S('circle', { class: 'ring', cx, cy, r: 130 }, g);
-    S('path', { d: blob(cx, cy, 58, r, 10, 0.3), fill: '#f08a7e', stroke: '#9c4038', 'stroke-width': 2 }, g);
-    S('path', { d: blob(cx, cy, 36, r, 9, 0.3), fill: '#ffd0a1' }, g);
-    for (let i = 0; i < 7; i++) { const a = i / 7 * 6.28; S('circle', { cx: f1(cx + Math.cos(a) * 46), cy: f1(cy + Math.sin(a) * 46), r: 7, fill: '#ff6fa8', stroke: '#9c3060', 'stroke-width': 1.5 }, g); }
-    S('circle', { cx, cy: cy - 4, r: 15, fill: '#fff3e0', stroke: '#c79a6a', 'stroke-width': 2 }, g);
-    S('path', { d: `M${cx - 70},${cy - 66} A96,96 0 0 1 ${cx + 20},${cy - 104}`, fill: 'none', stroke: '#fff', 'stroke-opacity': 0.6, 'stroke-width': 6, 'stroke-linecap': 'round' }, g);
-    labels(g, cx + 215, cy + 8, 'Fish-Man Island', '10,000 m beneath the Red Line');
-  })();
-  // the dive line under the wall
-  S('path', { class: 'dive', d: 'M2230,1500 C2310,1500 2330,1660 2410,1660 C2500,1660 2520,1560 2600,1540' }, gDive);
-
-  // Laughtale
-  (() => {
-    const n = nodes.laughtale, cx = n.cx, cy = n.cy, r = rng(41);
-    const g = nodeGroup(n, gPlaces, 'Laughtale, the final island: the Exit');
+    const n = nodes.exit, cx = n.cx, cy = n.cy, r = rng(41);
+    const g = nodeGroup(n, gPlaces, 'Exit Island, the treasure at the end of the line');
     const rays = S('g', { transform: `translate(${cx},${cy})` }, g);
     const spin = S('g', { class: 'rays' }, rays);
     for (let i = 0; i < 12; i++) S('path', { d: 'M0,0 L560,-26 L560,26Z', fill: 'url(#beam)', opacity: 0.28, transform: `rotate(${i * 30})` }, spin);
     S('circle', { class: 'glow', cx, cy, r: 340, fill: 'url(#gold)' }, g);
     S('circle', { class: 'ring', cx, cy, r: 200 }, g);
     isle(g, cx, cy, 150, r, { gold: true, hills: 2, palms: 9 });
-    for (let i = 0; i < 10; i++) { const a = i / 10 * 6.28; S('circle', { cx: f1(cx + Math.cos(a) * 70), cy: f1(cy + Math.sin(a) * 70), r: 7, fill: '#d8d2c4', stroke: '#6b6152', 'stroke-width': 2 }, g); }
     const c = S('g', { transform: `translate(${cx},${cy}) scale(1.2)` }, g);
     S('ellipse', { cy: 28, rx: 50, ry: 12, fill: '#000', opacity: 0.25 }, c);
     S('rect', { x: -38, y: -8, width: 76, height: 36, rx: 5, fill: '#8a5a2b', stroke: '#3f2a14', 'stroke-width': 3 }, c);
@@ -433,21 +414,21 @@
     S('path', { d: 'M-32,-10 Q0,-32 32,-10 L28,-4 L-28,-4Z', fill: '#ffd166', stroke: '#b8860b', 'stroke-width': 2 }, c);
     [-24, 0, 24].forEach(x => S('rect', { x: x - 2, y: -8, width: 4, height: 36, fill: '#d9a441' }, c));
     S('rect', { x: -8, y: -8, width: 16, height: 17, rx: 2, fill: '#ffd166', stroke: '#3f2a14', 'stroke-width': 2 }, c);
-    labels(g, cx - 20, cy + 250, 'Laughtale', 'the One Piece · your Exit', true);
+    [[-70, 40], [60, 52], [-30, -70]].forEach(([dx, dy]) => S('circle', { cx: cx + dx, cy: cy + dy, r: 9, fill: '#ffd166', stroke: '#b8860b', 'stroke-width': 2 }, g)); // scattered coins
+    labels(g, cx - 20, cy + 250, 'Exit Island', 'acquisition · IPO · the treasure', true);
   })();
 
-  // Road Poneglyphs
-  D.poneglyphs.forEach((p, j) => {
-    const n = nodes[`pg-${j}`], r = rng(500 + j), cx = n.cx, cy = n.cy;
-    const g = nodeGroup(n, gPlaces, `Road Poneglyph: ${p.name}`);
+  // four beacons guarding the approach
+  D.beacons.forEach((p, j) => {
+    const n = nodes[`bc-${j}`], r = rng(500 + j), cx = n.cx, cy = n.cy;
+    const g = nodeGroup(n, gPlaces, `${p.title}`);
     S('circle', { class: 'ring', cx, cy, r: 46 }, g);
-    S('path', { d: blob(cx, cy + 4, 36, r, 9, 0.3), fill: '#8b8070', stroke: '#4d4538', 'stroke-width': 2 }, g);
-    const m = S('g', { transform: `translate(${cx},${cy}) rotate(${12 + j * 9})` }, g);
-    S('rect', { x: -14, y: -10, width: 32, height: 32, fill: '#020f1a', opacity: 0.35 }, m);
-    S('rect', { x: -18, y: -18, width: 32, height: 32, fill: '#b23b31', stroke: '#4a1410', 'stroke-width': 2.5 }, m);
-    S('path', { d: 'M-12,-10 h8 M-12,-3 h14 M-12,4 h6 M0,4 h8 M-12,11 h12', stroke: '#4a1410', 'stroke-width': 2, 'stroke-linecap': 'round' }, m);
+    S('circle', { class: 'glow', cx, cy, r: 70, fill: 'url(#gold)' }, g);
+    S('path', { d: blob(cx, cy + 4, 34, r, 9, 0.3), fill: '#8b8070', stroke: '#4d4538', 'stroke-width': 2 }, g);
+    S('circle', { cx: cx + 4, cy: cy + 6, r: 16, fill: '#000', opacity: 0.3 }, g);
+    [[16, '#fff'], [12, '#2f6fb0'], [8, '#fff'], [4.5, '#ffd166']].forEach(([rr, c]) => S('circle', { cx, cy, r: rr, fill: c, stroke: rr === 16 ? '#2e1a0b' : 'none', 'stroke-width': 2 }, g));
     S('text', { class: 'pg-name', x: cx, y: cy + 62 }, g).textContent = p.name.toUpperCase();
-    S('text', { class: 'pg-sub', x: cx, y: cy + 84 }, g).textContent = 'Road Poneglyph';
+    S('text', { class: 'pg-sub', x: cx, y: cy + 84 }, g).textContent = 'beacon';
   });
 
   /* ---------- lane islands ---------- */
@@ -489,7 +470,6 @@
   /* ---------- ship ---------- */
   const shipBody = S('g', { class: 'bob' }, gShip);
   shipBody.innerHTML = `
-    <circle class="dive-bubble" r="78" fill="url(#bubbleG)" stroke="#c8f6ff" stroke-width="2.5"/>
     <path d="M-44,6 C-44,-11 -26,-15 2,-15 C28,-15 46,-6 62,6 C46,18 28,27 2,27 C-26,27 -44,23 -44,6Z" fill="#021a2c" opacity=".3"/>
     <path d="M-46,0 C-46,-17 -28,-21 0,-21 C26,-21 45,-11 60,0 C45,11 26,21 0,21 C-28,21 -46,17 -46,0Z" fill="url(#woodG)" stroke="#2e1a0b" stroke-width="3"/>
     <path d="M-39,0 C-39,-12 -25,-15 0,-15 C22,-15 37,-8 49,0 C37,8 22,15 0,15 C-25,15 -39,12 -39,0Z" fill="#c99560"/>
@@ -508,7 +488,7 @@
   function placeShip(x, y, deg) {
     shipPos.x = x; shipPos.y = y;
     gShip.setAttribute('transform', `translate(${f1(x)},${f1(y)}) rotate(${f1(deg)}) scale(1.25)`);
-    gShip.classList.toggle('diving', Math.abs(x - RL2) < 175 && y > 1450);
+
   }
   placeShip(shipPos.x, shipPos.y, 0);
   function setLane(id) {
@@ -546,20 +526,16 @@
     return out;
   }
 
-  // From Laughtale the voyage continues east, through the wrapped Red Line, back to Reverse Mountain.
-  function sailRound() {
-    sailing = true; follow = true; gShip.classList.add('sailing');
-    if (!wakeRunning) { wakeRunning = true; requestAnimationFrame(wakeLoop); }
-    const from = { x: shipPos.x, y: shipPos.y }, t0 = performance.now();
+  // From Exit Island the treasure goes home: the ship fades out and reappears in the harbour below Founders' Peak.
+  function sailHome() {
+    sailing = true; follow = false;
+    const t0 = performance.now();
     const step = now => {
-      const t = Math.min(1, (now - t0) / 2200);
-      placeShip(from.x + (RL3 + 60 - from.x) * t, from.y, 0);
-      gShip.style.opacity = f1(1 - sm(0.55, 1, t));
-      if (follow) centerOn(shipPos.x, shipPos.y - 40, cam.tk);
+      const t = Math.min(1, (now - t0) / 1600);
+      gShip.style.opacity = f1(t < 0.5 ? 1 - t * 2 : (t - 0.5) * 2);
+      if (t >= 0.5 && shipAt !== 'start') { shipAt = 'start'; placeShip(nodes.start.x, nodes.start.y, 0); focusNode(nodes.start); }
       if (t < 1) return requestAnimationFrame(step);
-      sailing = false; gShip.classList.remove('sailing');
-      shipAt = 'start'; placeShip(nodes.start.x, nodes.start.y, 0); gShip.style.opacity = '';
-      cam.moving = false; pending = null;
+      sailing = false; gShip.style.opacity = ''; pending = null;
       arrive('start');
     };
     requestAnimationFrame(step);
@@ -568,7 +544,7 @@
   function sailTo(id) {
     if (sailing) { pending = id; return; }
     if (id === shipAt) return arrive(id);
-    if (shipAt === 'laughtale' && id === 'start') return sailRound();
+    if (shipAt === 'exit' && id === 'start') return sailHome();
     const ids = findRoute(shipAt, id);
     const segs = [];
     for (let i = 0; i < ids.length - 1; i++) {
@@ -627,39 +603,27 @@
     focusNode(n);
   }
 
-  /* ---------- Log Pose ---------- */
+  /* ---------- compass ---------- */
   const laneOr = () => currentLane || (focusLane || D.lanes[0].id);
+  // bearings from a node: the next island on its route first, then cross-currents or the beacons
   function nextOf(id) {
     const n = nodes[id];
     if (!n) return [];
-    if (id === 'start') return ['twin'];
-    if (id === 'twin') return [`${laneOr()}-0`];
-    if (id === 'sabaody') return ['fishman'];
-    if (id === 'laughtale') return ['start'];
-    if (id === 'fishman') {
-      const li = D.lanes.findIndex(l => l.id === laneOr());
-      return [li, (li + 1) % 7, (li + 6) % 7].map(i => `${D.lanes[i].id}-3`);
-    }
+    if (id === 'start') return [`${laneOr()}-0`];
+    if (id === 'exit') return ['start'];
     if (n.type !== 'island') return [];
-    if (n.k < 2) return [`${n.lane.id}-${n.k + 1}`];
-    if (n.k === 2) return ['sabaody'];
-    if (n.k === 3) {
-      const out = [`${n.lane.id}-4`, ...D.crossovers.filter(c => c.a === id).map(c => c.b)];
-      [n.li + 1, n.li - 1].forEach(i => { if (D.lanes[i]) out.push(`${D.lanes[i].id}-4`); });
-      return [...new Set(out)].slice(0, 3);
+    if (n.k === 4) {
+      const bcs = D.beacons.map((_, j) => nodes[`bc-${j}`]).sort((a, b) => Math.hypot(a.cx - n.x, a.cy - n.y) - Math.hypot(b.cx - n.x, b.cy - n.y));
+      return ['exit', bcs[0].id, bcs[1].id];
     }
-    const pgs = D.poneglyphs.map((_, j) => nodes[`pg-${j}`]).sort((a, b) => Math.hypot(a.cx - n.x, a.cy - n.y) - Math.hypot(b.cx - n.x, b.cy - n.y));
-    return ['laughtale', pgs[0].id, pgs[1].id];
+    return [...new Set([`${n.lane.id}-${n.k + 1}`, ...D.crossovers.filter(c => c.a === id).map(c => c.b)])].slice(0, 3);
   }
   function prevOf(id) {
     const n = nodes[id];
     if (!n) return null;
-    if (id === 'twin') return 'start';
-    if (id === 'sabaody') return `${laneOr()}-2`;
-    if (id === 'fishman') return 'sabaody';
-    if (id === 'laughtale') return `${laneOr()}-4`;
+    if (id === 'exit') return `${laneOr()}-4`;
     if (n.type !== 'island') return null;
-    return n.k === 0 ? 'twin' : n.k === 3 ? 'fishman' : `${n.lane.id}-${n.k - 1}`;
+    return n.k === 0 ? 'start' : `${n.lane.id}-${n.k - 1}`;
   }
   const NEEDLE = ['#ff5a5f', '#ffd166', '#bfe9ff'];
   const needles = $('lpNeedles');
@@ -667,19 +631,20 @@
   let lpTargets = [];
   const posOf = n => (n.sail ? [n.x, n.y] : [n.cx, n.cy]);
   function updateNeedles() {
-    lpTargets.forEach((id, i) => {
-      const el = needles.children[i], [tx, ty] = posOf(nodes[id]);
-      const a = id === 'start' && shipAt === 'laughtale' ? 90 : Math.atan2(ty - shipPos.y, tx - shipPos.x) * 180 / Math.PI + 90;
-      el.setAttribute('transform', `rotate(${f1(a)})`);
-    });
+    const id = lpTargets[0];
+    if (!id || !needles.children.length) return;
+    const [tx, ty] = posOf(nodes[id]);
+    const rot = `rotate(${f1(Math.atan2(ty - shipPos.y, tx - shipPos.x) * 180 / Math.PI + 90)})`;
+    [...needles.children].forEach(el => el.setAttribute('transform', rot));
   }
   function updateLogPose() {
     lpTargets = nextOf(shipAt);
     needles.innerHTML = '';
-    lpTargets.forEach((_, i) => S('path', { d: 'M0,-40 L5,-3 L0,7 L-5,-3Z', fill: NEEDLE[i], stroke: '#1a0f06', 'stroke-width': 1 }, needles));
+    S('path', { d: 'M0,-40 L5,-3 L0,7 L-5,-3Z', fill: NEEDLE[0], stroke: '#1a0f06', 'stroke-width': 1 }, needles);
+    S('path', { d: 'M0,40 L5,3 L0,-7 L-5,3Z', fill: '#e8eef2', stroke: '#1a0f06', 'stroke-width': 1 }, needles);
+    needles.lastChild.setAttribute('class', 'tail');
     updateNeedles();
-    const nw = shipPos.x >= RL2 - 20;
-    $('lpSea').textContent = nw ? 'Log Pose · New World · three needles' : 'Log Pose · Paradise · one needle';
+    $('lpSea').textContent = `Compass · ${shipPos.x > RL2 ? 'Global Waters' : 'Home Waters'}${lpTargets.length > 1 ? ' · bearings' : ''}`;
     $('lpTargets').innerHTML = lpTargets.map((id, i) => `<button data-go="${id}" style="--c:${NEEDLE[i]}">${esc(nodes[id].data.name)}</button>`).join('');
   }
   $('lpTargets').addEventListener('click', e => { const b = e.target.closest('[data-go]'); if (b) select(b.dataset.go); });
@@ -718,7 +683,8 @@
   const closeUp = () => Math.max(0.5, Math.min(0.9, Math.min(vw(), vh()) / 1000));
   function focusNode(n) {
     if (n.zoom) return centerOn(n.cx, n.cy, Math.min(cam.tk, n.zoom * closeUp() / 0.85));
-    if (!n.sail || n.type === 'start' || n.type === 'laughtale' || n.id === 'sabaody' || n.id === 'fishman') return centerOn(n.cx, n.cy + (n.type === 'start' ? 60 : 30), Math.max(cam.tk, closeUp() * 0.8));
+    if (n.type === 'start') return centerOn(n.x - 200, n.cy + 60, Math.max(cam.tk, closeUp() * 0.8));
+    if (!n.sail || n.type === 'exit') return centerOn(n.cx, n.cy + 30, Math.max(cam.tk, closeUp() * 0.8));
     centerOn(n.cx + (n.x - n.cx) / 2, n.cy + 30, Math.max(cam.tk, closeUp()));
   }
   const fitView = () => { const k = fitK(); return [(vw() + side()) / 2 - (W / 2) * k, vh() / 2 - (H / 2) * k, k]; };
@@ -758,7 +724,7 @@
   let selected = null;
   const list = (title, items) => items && items.length ? `<h3>${title}</h3><ul>${items.map(p => `<li>${esc(p)}</li>`).join('')}</ul>` : '';
   const chips = (title, items) => items && items.length ? `<h3>${title}</h3><div class="chips">${items.map(p => `<span>${esc(p)}</span>`).join('')}</div>` : '';
-  const lore = t => t ? `<div class="lore"><span>☠ In the legend</span>${esc(t)}</div>` : '';
+  const lore = t => t ? `<div class="lore"><span>☠ Sailor’s lore</span>${esc(t)}</div>` : '';
   const meaning = t => `<div class="means"><span>⚓ On the startup sea</span>${esc(t)}</div>`;
   const tag = (color, text) => `<p class="route-tag" style="--c:${color}"><i></i>${esc(text)}</p>`;
   function navButtons(id) {
@@ -788,31 +754,28 @@
         ${chips('Famous landings from this route', d.landings)}
         ${cur ? `<h3>Cross-currents</h3><div class="currents">${cur}</div>` : ''}
         ${navButtons(n.id)}`;
-    } else if (n.type === 'blue') {
+    } else if (n.type === 'sea') {
       h = `${tag('#5aa9e6', `Founder origin · ${d.origin}`)}<h2>${esc(d.name)}</h2><p class="tagline">${esc(d.tagline)}</p>
-        ${lore(d.lore)}${meaning(d.desc)}${list('Who sails from here', d.points)}
-        <div class="nav"><button data-go="start">Ride the current to Reverse Mountain →</button></div>`;
-    } else if (n.type === 'poneglyph') {
-      h = `${tag('#b23b31', `Road Poneglyph ${n.j + 1} of 4`)}<h2>${esc(d.title)}</h2><p class="tagline">${esc(d.desc)}</p>
-        ${lore(d.lore)}${meaning('Buyers and public markets look for the same four proofs before they pay for a company. Read all four and the way to Laughtale appears.')}
-        ${list('What this stone says', d.points)}
-        <h3>The other stones</h3><div class="currents">${D.poneglyphs.map((p, j) => j === n.j ? '' : `<button data-go="pg-${j}" style="--c:#b23b31"><b>${esc(p.title)}</b>${esc(p.desc)}</button>`).join('')}</div>
-        <div class="nav"><button data-go="laughtale">Sail to Laughtale →</button></div>`;
+        ${meaning(d.desc)}${list('Who sails from here', d.points)}
+        <div class="nav"><button data-go="start">Ride the current to Founders’ Peak →</button></div>`;
+    } else if (n.type === 'beacon') {
+      h = `${tag('#2f6fb0', `Beacon ${n.j + 1} of 4`)}<h2>${esc(d.title)}</h2><p class="tagline">${esc(d.desc)}</p>
+        ${meaning(D.beaconNote)}${list('What this light checks', d.points)}
+        <h3>The other beacons</h3><div class="currents">${D.beacons.map((p, j) => j === n.j ? '' : `<button data-go="bc-${j}" style="--c:#2f6fb0"><b>${esc(p.title)}</b>${esc(p.desc)}</button>`).join('')}</div>
+        <div class="nav"><button data-go="exit">Sail to Exit Island →</button></div>`;
     } else if (n.type === 'key') {
-      h = `${tag('#ffd166', 'Chart key')}<h2>Reading this chart</h2><p class="tagline">Every landmark of the Grand Line, and what it means for a startup.</p>
-        <div class="keylist">${D.key.map(([a, b, go]) => `<button data-go="${go}"><b>${esc(a)}</b><span>${esc(b)}</span></button>`).join('')}</div>
-        <p class="stage-note">The world is a ring: the Red Line on the far right is the same wall as Reverse Mountain on the left. Exit money sails back round to start the voyage again.</p>`;
+      h = `${tag('#ffd166', 'Chart key')}<h2>Reading this chart</h2><p class="tagline">Every landmark on the chart, and what it means for a startup.</p>
+        <div class="keylist">${D.key.map(([a, b, go]) => `<button data-go="${go}"><b>${esc(a)}</b><span>${esc(b)}</span></button>`).join('')}</div>`;
     } else {
-      const color = { start: '#ad6a55', laughtale: '#ffd166', redline: '#b23b31', calm: '#2a5a4c', fishman: '#4fd0e8', sabaody: '#55ad5a', marijoa: '#f2c94c' }[n.id] || '#5aa9e6';
+      const color = { start: '#87845a', exit: '#ffd166', wall: '#8a8f9e', doldrums: '#2a5a4c', lighthouse: '#d9443c', 'reach-us': '#5aa9e6', 'reach-far': '#5aa9e6' }[n.id] || '#5aa9e6';
       h = `${tag(color, d.tag)}<h2>${esc(d.name)}</h2><p class="tagline">${esc(d.tagline)}</p>
-        ${lore(d.lore)}${meaning(d.desc)}${list(n.id === 'laughtale' ? 'Ways to land' : 'Notes from the logbook', d.points)}
+        ${lore(d.lore)}${meaning(d.desc)}${list(n.id === 'exit' ? 'Ways to land' : 'Notes from the logbook', d.points)}
         ${chips('Legendary treasures', d.legends)}`;
-      if (n.id === 'start') h += `<h3>The four currents</h3><div class="pick">${D.blues.map(b => `<button data-go="blue-${b.id}" style="--c:#5aa9e6"><b>${esc(b.name)} · ${esc(b.origin)}</b>${esc(b.tagline)}</button>`).join('')}</div>`;
-      if (n.id === 'twin' || n.id === 'paradise') h += `<h3>Choose your route</h3><div class="pick">${D.lanes.map(l => `<button data-go="${l.id}-0" style="--c:${l.color}"><b>${esc(l.name)} · ${esc(l.sector)}</b>${esc(l.blurb)}</button>`).join('')}</div>`;
-      if (n.id === 'redline') h += `<div class="pick"><button data-go="fishman" style="--c:#4fd0e8"><b>Under: Fish-Man Island</b>The dive into the US market</button><button data-go="marijoa" style="--c:#f2c94c"><b>Over: Mary Geoise</b>An early sale to a giant</button></div>`;
-      if (n.id === 'laughtale') h += `<h3>The four Road Poneglyphs</h3><div class="currents">${D.poneglyphs.map((p, j) => `<button data-go="pg-${j}" style="--c:#b23b31"><b>${esc(p.title)}</b>${esc(p.desc)}</button>`).join('')}</div>`;
-      h += n.sail ? navButtons(n.id) : '';
-      if (n.id === 'laughtale') h += `<div class="nav"><button data-go="start">↺ Sail round the world to Reverse Mountain</button></div>`;
+      if (n.id === 'start') h += `<h3>The four currents</h3><div class="pick">${D.seas.map(b => `<button data-go="sea-${b.id}" style="--c:#5aa9e6"><b>${esc(b.name)} · ${esc(b.origin)}</b>${esc(b.tagline)}</button>`).join('')}</div>`;
+      if (['start', 'lighthouse', 'home'].includes(n.id)) h += `<h3>Choose your route</h3><div class="pick">${D.lanes.map(l => `<button data-go="${l.id}-0" style="--c:${l.color}"><b>${esc(l.name)} · ${esc(l.sector)}</b>${esc(l.blurb)}</button>`).join('')}</div>`;
+      if (n.id === 'exit') h += `<h3>The four beacons</h3><div class="currents">${D.beacons.map((p, j) => `<button data-go="bc-${j}" style="--c:#2f6fb0"><b>${esc(p.title)}</b>${esc(p.desc)}</button>`).join('')}</div>`;
+      if (n.id === 'exit') h += `<div class="nav"><button data-go="start">↺ Take the treasure home and start again</button></div>`;
+      else if (n.sail) h += navButtons(n.id);
     }
     body.innerHTML = h;
     panel.hidden = false;

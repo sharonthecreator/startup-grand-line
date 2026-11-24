@@ -27,17 +27,17 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .spark { fill: #fff; opacity: 0; animation: twinkle 6s ease-in-out infinite; }
 @keyframes twinkle { 0%, 70%, 100% { opacity: 0; } 82% { opacity: .85; } }
 
-/* calm belts, blues, currents */
+/* doldrums, origin seas, currents */
 .belt rect { cursor: help; }
 .belt-edge { stroke: #cfefff; stroke-opacity: .28; stroke-width: 3; stroke-dasharray: 2 16; stroke-linecap: round; }
 .belt-name { font-family: var(--chart); font-size: 30px; letter-spacing: 10px; fill: #bfe2f2; opacity: .55; text-anchor: middle; cursor: help; }
 .seaking { pointer-events: none; }
 .sk { animation: surface 7s ease-in-out infinite; }
 @keyframes surface { 50% { transform: translate(14px, -5px); } }
-.blue { cursor: pointer; }
-.blue-name { font-family: var(--chart); font-size: 84px; letter-spacing: 22px; fill: #e8f6ff; opacity: .62; text-anchor: middle; paint-order: stroke; stroke: var(--outline); stroke-width: 6px; stroke-opacity: .5; }
-.blue-sub { font-family: var(--body); font-style: italic; font-size: 26px; fill: #d4ecf7; opacity: .8; text-anchor: middle; paint-order: stroke; stroke: var(--outline); stroke-width: 5px; stroke-opacity: .6; }
-.blue:hover .blue-name, .blue.selected .blue-name { opacity: 1; fill: #fff; }
+.sea, .reach { cursor: pointer; }
+.sea-name { font-family: var(--chart); font-size: 62px; letter-spacing: 12px; fill: #e8f6ff; opacity: .62; text-anchor: middle; paint-order: stroke; stroke: var(--outline); stroke-width: 6px; stroke-opacity: .5; }
+.sea-sub { font-family: var(--body); font-style: italic; font-size: 26px; fill: #d4ecf7; opacity: .8; text-anchor: middle; paint-order: stroke; stroke: var(--outline); stroke-width: 5px; stroke-opacity: .6; }
+.sea:hover .sea-name, .sea.selected .sea-name, .reach:hover .sea-name, .reach.selected .sea-name { opacity: 1; fill: #fff; }
 .current { fill: none; stroke: #9ee9ff; stroke-opacity: .2; stroke-width: 34; stroke-linecap: round; }
 .current-flow { fill: none; stroke: #e6fbff; stroke-opacity: .75; stroke-width: 4; stroke-linecap: round; stroke-dasharray: 3 30; animation: flow 1.4s linear infinite; }
 .region { font-family: var(--chart); font-size: 74px; letter-spacing: 26px; fill: #fff4d6; text-anchor: middle; paint-order: stroke; stroke: var(--outline); stroke-width: 8px; cursor: pointer; }
@@ -52,16 +52,16 @@ button { font: inherit; color: inherit; cursor: pointer; }
 @keyframes flow { to { stroke-dashoffset: -28; } }
 .cross { fill: none; stroke: #e6fbff; stroke-width: 3; stroke-dasharray: 10 14; stroke-linecap: round; opacity: .4; }
 .ghost { fill: none; stroke: none; }
-.dive { fill: none; stroke: #8ff3ff; stroke-width: 6; stroke-dasharray: 4 14; stroke-linecap: round; opacity: .85; animation: flow 1.2s linear infinite; pointer-events: none; }
 .dim { opacity: .1 !important; }
 .route, .route-flow, .cross, .island { transition: opacity .35s; }
 
-/* red line + mountain */
+/* home shore, wall, peak */
+.shore-name { font-family: var(--chart); font-size: 40px; letter-spacing: 14px; fill: #eef7df; text-anchor: middle; paint-order: stroke; stroke: #1f4a26; stroke-width: 6px; }
+.trail { fill: none; stroke: #fff3d6; stroke-width: 5; stroke-dasharray: 2 12; stroke-linecap: round; opacity: .9; }
+.whale { pointer-events: none; opacity: .85; }
 .redline { cursor: pointer; }
-.redline:hover polygon:nth-child(3) { stroke: #ffcbb8; }
-.rl-name { font-family: var(--chart); font-size: 44px; letter-spacing: 16px; fill: #ffe1d6; text-anchor: middle; paint-order: stroke; stroke: #3a0e0b; stroke-width: 6px; }
-.canal { fill: none; stroke: #2ba3d6; stroke-width: 15; stroke-linecap: round; }
-.canal-flow { fill: none; stroke: #e6fbff; stroke-width: 3.5; stroke-linecap: round; stroke-dasharray: 3 16; animation: flow 1s linear infinite; }
+.redline:hover polygon:nth-child(3) { stroke: #e6ecff; }
+.rl-name { font-family: var(--chart); font-size: 44px; letter-spacing: 16px; fill: #eef0f5; text-anchor: middle; paint-order: stroke; stroke: #14161c; stroke-width: 6px; }
 
 /* nodes */
 .node { cursor: pointer; outline: none; }
@@ -80,16 +80,14 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .sub { font-family: var(--chart); font-size: 18px; letter-spacing: 3px; fill: var(--c, #cfeaf5); text-anchor: middle; text-transform: uppercase; paint-order: stroke; stroke: var(--outline); stroke-width: 5px; stroke-linejoin: round; }
 .name.big { font-size: 66px; fill: #fff4d6; }
 .sub.big { font-size: 24px; fill: #ffe9a8; }
-.pg-name { font-family: var(--chart); font-size: 22px; letter-spacing: 4px; fill: #ffd9cf; text-anchor: middle; paint-order: stroke; stroke: #3a0e0b; stroke-width: 5px; }
-.pg-sub { font-family: var(--body); font-style: italic; font-size: 16px; fill: #f2d8cf; text-anchor: middle; paint-order: stroke; stroke: #3a0e0b; stroke-width: 4px; }
+.pg-name { font-family: var(--chart); font-size: 22px; letter-spacing: 4px; fill: #fff1c9; text-anchor: middle; paint-order: stroke; stroke: #08263f; stroke-width: 5px; }
+.pg-sub { font-family: var(--body); font-style: italic; font-size: 16px; fill: #e8f1f7; text-anchor: middle; paint-order: stroke; stroke: #08263f; stroke-width: 4px; }
 
 .beam { animation: spin 9s linear infinite; transform-origin: 0 0; }
 .rays { animation: spin 60s linear infinite; transform-origin: 0 0; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .glow { animation: glow 3s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: center; }
 @keyframes glow { from { opacity: .5; transform: scale(.93); } to { opacity: 1; transform: scale(1.07); } }
-.bubble { animation: rise 6s ease-in-out infinite; }
-@keyframes rise { 0% { transform: translateY(0); opacity: 0; } 20% { opacity: 1; } 100% { transform: translateY(-90px); opacity: 0; } }
 
 /* clouds */
 .clouds { pointer-events: none; opacity: .62; transition: opacity .6s; }
@@ -103,12 +101,9 @@ button { font: inherit; color: inherit; cursor: pointer; }
 @keyframes bob { 50% { transform: translateY(-2px) rotate(2deg); } }
 #ship .sail { fill: #fff8ea; stroke: #bfb29a; stroke-width: 1.5; }
 #ship .sail-stripe, #ship .ship-flag { fill: var(--c); }
-#ship .dive-bubble { opacity: 0; transition: opacity .4s; }
-#ship.diving .dive-bubble { opacity: .9; }
-#ship.diving .bob { opacity: .8; }
 
 /* level of detail */
-.far .sub, .far .pg-sub, .far .route-flow, .far .stagehead-sub, .far .blue-sub { display: none; }
+.far .sub, .far .pg-sub, .far .route-flow, .far .stagehead-sub, .far .sea-sub { display: none; }
 .far .name { font-size: 46px; }
 .far .name.big { font-size: 90px; }
 
@@ -222,5 +217,5 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .waves, .waves2, .route-flow, .current-flow, .canal-flow, .dive, .glow, .beam, .rays, .bubble, .cloud, .sk, .spark, #ship .bob, .node.selected .ring { animation: none; }
+  .waves, .waves2, .route-flow, .current-flow, .glow, .beam, .rays, .cloud, .sk, .spark, #ship .bob, .node.selected .ring { animation: none; }
 }
