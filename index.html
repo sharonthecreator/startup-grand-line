@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Startup Grand Line — a sea chart of Israel's startup routes</title>
+  <meta name="description" content="An interactive sea chart of the Israeli startup journey: seven routes from Reverse Mountain to the Exit.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Spectral:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <svg id="sea" aria-label="Sea chart of the Startup Grand Line"></svg>
+
+  <header class="hud title-card">
+    <h1>Startup Grand Line</h1>
+    <p>Israel’s startup seas, charted</p>
+    <p class="log" id="log"></p>
+  </header>
+
+  <nav class="hud legend" id="legend" aria-label="Routes">
+    <button class="legend-toggle" id="legendToggle" aria-expanded="false">Routes</button>
+    <ul id="legendList"></ul>
+  </nav>
+
+  <div class="hud zoom" role="group" aria-label="Map zoom">
+    <button id="zoomIn" aria-label="Zoom in">+</button>
+    <button id="zoomOut" aria-label="Zoom out">−</button>
+    <button id="zoomFit" aria-label="Show whole map" title="Show whole map">⤢</button>
+  </div>
+
+  <aside class="panel" id="panel" aria-live="polite" hidden>
+    <button class="close" id="panelClose" aria-label="Close">×</button>
+    <div id="panelBody"></div>
+  </aside>
+
+  <div class="intro" id="intro">
+    <div class="scroll">
+      <p class="kicker">A sea chart of the Israeli startup journey</p>
+      <h2>Startup Grand Line</h2>
+      <p>Seven routes leave <strong>Reverse Mountain</strong> — one for each sea of Israeli tech. Each passes five islands, from Pre-Seed to Late Stage, crosses the <strong>Red Line</strong> into global waters, and ends at the same treasure: <strong>the Exit</strong>.</p>
+      <p class="how">Click any island and your ship will sail there. Drag to pan, scroll or pinch to zoom, and follow the dashed cross-currents to drift between routes.</p>
+      <button id="setSail">Set sail</button>
+      <p class="fine">An illustrative map, not investment advice. Company facts are as publicly reported.</p>
+    </div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
