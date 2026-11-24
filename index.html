@@ -3,31 +3,54 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Startup Grand Line — a sea chart of Israel's startup routes</title>
-  <meta name="description" content="An interactive sea chart of the Israeli startup journey: seven routes from Reverse Mountain to the Exit.">
+  <title>Startup Grand Line</title>
+  <meta name="description" content="A One Piece–style sea chart of the Israeli startup journey: from the four Blues over Reverse Mountain, through Paradise and under the Red Line, to Laughtale — the Exit.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Spectral:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&family=Pirata+One&family=Spectral:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <svg id="sea" aria-label="Sea chart of the Startup Grand Line"></svg>
+  <div class="frame" aria-hidden="true"></div>
 
-  <header class="hud title-card">
+  <div class="hud leftcol">
+  <header class="title-card">
     <h1>Startup Grand Line</h1>
-    <p>Israel’s startup seas, charted</p>
+    <p class="subtitle">Israel’s startup seas, charted</p>
     <p class="log" id="log"></p>
+    <button class="key-btn" id="keyBtn">📜 Chart key</button>
   </header>
 
-  <nav class="hud legend" id="legend" aria-label="Routes">
+  <nav class="legend" id="legend" aria-label="Routes">
     <button class="legend-toggle" id="legendToggle" aria-expanded="false">Routes</button>
     <ul id="legendList"></ul>
   </nav>
+  </div>
 
   <div class="hud zoom" role="group" aria-label="Map zoom">
     <button id="zoomIn" aria-label="Zoom in">+</button>
     <button id="zoomOut" aria-label="Zoom out">−</button>
     <button id="zoomFit" aria-label="Show whole map" title="Show whole map">⤢</button>
+  </div>
+
+  <div class="hud logpose" id="logpose">
+    <button class="lp-globe" id="lpGlobe" aria-label="Sail where the Log Pose points">
+      <svg viewBox="-60 -60 120 120" aria-hidden="true">
+        <defs>
+          <radialGradient id="lpGlass" cx=".38" cy=".3" r=".85"><stop offset="0" stop-color="#fff" stop-opacity=".5"/><stop offset=".35" stop-color="#bfeaf7" stop-opacity=".12"/><stop offset="1" stop-color="#062a44" stop-opacity=".55"/></radialGradient>
+          <linearGradient id="lpRim" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c98d4a"/><stop offset="1" stop-color="#5a3416"/></linearGradient>
+        </defs>
+        <circle r="57" fill="url(#lpRim)" stroke="#2e1a0b" stroke-width="2.5"/>
+        <circle r="48" fill="#0d3550" stroke="#2e1a0b" stroke-width="2"/>
+        <g id="lpTicks"></g>
+        <g id="lpNeedles"></g>
+        <circle r="5" fill="#ffd166" stroke="#2e1a0b"/>
+        <circle r="48" fill="url(#lpGlass)"/>
+        <path d="M-32,-28 A42,42 0 0 1 6,-43" stroke="#fff" stroke-opacity=".65" stroke-width="4" fill="none" stroke-linecap="round"/>
+      </svg>
+    </button>
+    <div class="lp-info"><small id="lpSea">Log Pose</small><div id="lpTargets"></div></div>
   </div>
 
   <aside class="panel" id="panel" aria-live="polite" hidden>
@@ -39,10 +62,10 @@
     <div class="scroll">
       <p class="kicker">A sea chart of the Israeli startup journey</p>
       <h2>Startup Grand Line</h2>
-      <p>Seven routes leave <strong>Reverse Mountain</strong> — one for each sea of Israeli tech. Each passes five islands, from Pre-Seed to Late Stage, crosses the <strong>Red Line</strong> into global waters, and ends at the same treasure: <strong>the Exit</strong>.</p>
-      <p class="how">Click any island and your ship will sail there. Drag to pan, scroll or pinch to zoom, and follow the dashed cross-currents to drift between routes.</p>
+      <p>The world is split by the <strong>Red Line</strong>, a continent ringing the globe, and the <strong>Grand Line</strong>, the sea route around its middle. Founders from the four <strong>Blues</strong> ride their currents up <strong>Reverse Mountain</strong>, pick one of seven routes through <strong>Paradise</strong>, meet at <strong>Sabaody</strong>, dive beneath the Red Line to the <strong>New World</strong> — and, with all four <strong>Road Poneglyphs</strong> read, reach <strong>Laughtale</strong>. The One Piece waiting there is the Exit.</p>
+      <p class="how">Click any island and your ship sails there. Drag to pan, scroll or pinch to zoom, follow the Log Pose, and open the 📜 chart key to see what each landmark means.</p>
       <button id="setSail">Set sail</button>
-      <p class="fine">An illustrative map, not investment advice. Company facts are as publicly reported.</p>
+      <p class="fine">A fan-made illustrative chart, not investment advice. Company facts are as publicly reported.</p>
     </div>
   </div>
 

@@ -1,50 +1,110 @@
 /* Startup Grand Line — chart data.
-   Seven routes (startup sectors), five islands each (funding stages),
-   one starting point (Reverse Mountain) and one destination (The Exit). */
+   The One Piece world mapped onto the Israeli startup journey:
+   four Blues (founder origins) → Reverse Mountain → seven routes through Paradise (sectors × early stages)
+   → Sabaody → under the Red Line via Fish-Man Island → the New World (growth) → four Road Poneglyphs → Laughtale (the Exit). */
 window.GL = {
   stages: [
-    { key: 'pre-seed', name: 'Pre-Seed', about: 'A team, a problem and a first cheque from angels, a foundry or a grant.' },
-    { key: 'seed', name: 'Seed', about: 'A first product in the hands of first users, funded by seed funds.' },
-    { key: 'series-a', name: 'Series A', about: 'Product-market fit: proof that customers come back and pay.' },
-    { key: 'growth', name: 'Growth (Series B–C)', about: 'Past the Red Line: scaling sales and teams in global markets.' },
-    { key: 'late', name: 'Late Stage', about: 'A mature company choosing between an IPO, a buyer, or staying independent.' }
+    { key: 'pre-seed', name: 'Pre-Seed', sea: 'Paradise', about: 'A team, a problem and a first cheque from angels, a foundry or a grant.' },
+    { key: 'seed', name: 'Seed', sea: 'Paradise', about: 'A first product in the hands of first users, funded by seed funds.' },
+    { key: 'series-a', name: 'Series A', sea: 'Paradise', about: 'Product-market fit: proof that customers come back and pay. The last island before the routes meet at Sabaody.' },
+    { key: 'growth', name: 'Growth (Series B–C)', sea: 'New World', about: 'Through the Red Line and into the New World: scaling sales and teams in global markets.' },
+    { key: 'late', name: 'Late Stage', sea: 'New World', about: 'A mature company reading the Road Poneglyphs: an IPO, a buyer, or staying independent.' }
   ],
 
-  start: {
-    name: 'Reverse Mountain',
-    tagline: 'Every voyage begins by sailing uphill.',
-    desc: 'This is the moment of decision: finishing army service, leaving a comfortable job at a multinational R&D centre, or walking out of a university lab with an idea. Seven currents run down the mountain, one for each sea of the Israeli startup world. Pick one — you can still drift between them later.',
-    points: [
-      'Israel spends a larger share of its GDP on R&D than almost any other country.',
-      'The Yozma programme (1993) used public money to seed the local venture-capital industry.',
-      'The Israel Innovation Authority still co-funds early, risky R&D with grants.',
-      'Hundreds of multinationals run R&D centres here — a steady supply of future founders.'
-    ]
+  /* The four seas = where founders come from. */
+  blues: [
+    { id: 'east', name: 'East Blue', origin: 'The Units', tagline: 'The “weakest” sea launches the boldest crews.',
+      lore: 'Considered the weakest of the four seas — and yet the home port of the crew that sets out to become King of the Pirates.',
+      desc: 'The classic launch sea for Israeli founders is military service. Technology and intelligence units hand people in their early twenties real responsibility, real systems and a team they trust. Many leave with their co-founders already on board.',
+      points: ['Units such as 8200, Talpiot and Mamram are well-known founder pipelines', 'Alumni networks work like a crew list for hiring and introductions', 'Strongest pull towards Cipher Strait (cyber) and Cloud Channel (software)'] },
+    { id: 'west', name: 'West Blue', origin: 'The Scholars', tagline: 'The sea of scholars.',
+      lore: 'Home of Ohara, the island of scholars who could read what no one else could.',
+      desc: 'Deep-tech, health and climate crews often start in universities and research institutes. Technology-transfer companies license inventions out of the lab, and professors and PhDs become founders.',
+      points: ['Tech-transfer companies such as Yissum (Hebrew University), Yeda (Weizmann), Ramot (Tel Aviv University) and T3 (Technion)', 'Long voyages: years of research before a product', 'Strongest pull towards Lifeline Passage, Green Tide and Silicon Run'] },
+    { id: 'north', name: 'North Blue', origin: 'The R&D Centres', tagline: 'Engineers trained on the world’s biggest ships.',
+      lore: 'One of the four seas; home waters of captains such as Trafalgar Law and X Drake.',
+      desc: 'Hundreds of multinationals run R&D centres in Israel. Engineers learn how world-class products are built and sold at scale — then leave to build their own.',
+      points: ['R&D centres of Intel, Microsoft, Google, Apple, Nvidia and many more', 'Founders who already know how enterprise customers buy', 'Strongest pull towards Cloud Channel and Silicon Run'] },
+    { id: 'south', name: 'South Blue', origin: 'The Returning Captains', tagline: 'Crews who have sailed before — and newcomers from afar.',
+      lore: 'The fourth sea, birthplace of Portgas D. Ace.',
+      desc: 'Serial founders who already reached an exit come back to Reverse Mountain with money, a network and scars. Immigration feeds this sea too: the wave of engineers and scientists who arrived from the former Soviet Union in the 1990s reshaped Israeli tech.',
+      points: ['Second- and third-time founders raise faster and larger rounds', 'Exit money flows back as angel investment', 'Immigrant and returning founders bring global networks'] }
+  ],
+
+  places: {
+    start: { name: 'Reverse Mountain', tag: 'Gateway to the Grand Line', tagline: 'Every voyage begins by sailing uphill.',
+      lore: 'Where the Red Line crosses the Grand Line, the currents of all four Blues climb a mountain, meet at the summit and pour down into the Grand Line.',
+      desc: 'The moment of commitment. Founders arrive from four different seas — the army units, the universities, the corporate R&D centres and the returning serial founders — and their currents merge into one. Going up is the hard part, and once over the top there is no sailing back the way you came.',
+      points: ['Israel spends a larger share of its GDP on R&D than almost any other country', 'The Yozma programme (1993) used public money to seed the local venture-capital industry', 'Hundreds of multinational R&D centres feed a steady flow of future founders'] },
+    twin: { name: 'Twin Capes', tag: 'The lighthouse', tagline: 'A light for crews entering the Grand Line.',
+      lore: 'At the foot of Reverse Mountain stands a lighthouse whose keeper looks after crews who have just entered the Grand Line.',
+      desc: 'The first port for new crews: incubators, accelerators and early programmes inspect the ship, hand out the first provisions and point you to a route. Seven routes fan out from here — one per sector.',
+      points: ['Israel Innovation Authority grants, repaid through royalties only if the company sells', 'Incubators and accelerators, including government-backed programmes', 'Venture studios and foundries that help assemble the crew'] },
+    calm: { name: 'The Calm Belt', tag: 'Danger zone', tagline: 'No wind. No current. Something huge below.',
+      lore: 'Two belts of dead-calm sea run along both sides of the Grand Line. With no wind a ship cannot move, and the water is the nest of giant Sea Kings.',
+      desc: 'The startup Calm Belt is the “valley of death”: the stretch where the money runs out before revenue arrives. Drift out of your route without a new round and the ship stops moving.',
+      points: ['Most startups never reach their next round', 'Runway is your wind — count it in months, not hopes', 'Bridge rounds, pivots and lean crews are how ships escape'] },
+    paradise: { name: 'Paradise', tag: 'First half of the Grand Line', tagline: 'Called “paradise” only by those who have seen what comes next.',
+      lore: 'The first half of the Grand Line. Seven routes leave Reverse Mountain, and a Log Pose with a single needle leads from island to island by their magnetic pull.',
+      desc: 'The home waters: building the crew, the product and the proof, mostly from Israel. Each route is a sector, and each island a funding stage from Pre-Seed to Series A. The single needle is your next milestone — in Paradise there is always exactly one.',
+      points: ['Mostly Israeli and early-stage investors', 'One clear next milestone at a time', 'All seven routes meet again at Sabaody, at the foot of the Red Line'] },
+    sabaody: { name: 'Sabaody Archipelago', tag: 'Where the seven routes meet', tagline: 'Coat the ship before the dive.',
+      lore: 'A grove of giant mangroves at the foot of the Red Line, where the routes through Paradise come together. Ships are coated in a bubble before diving beneath the Red Line to Fish-Man Island.',
+      desc: 'Every sector arrives here before going global. Coating the startup means raising the big round and preparing the crossing: a US parent company, a US bank, a go-to-market leader and a founder ready to move.',
+      points: ['Series B — the round that pays for the crossing', 'Setting up a US company (often in Delaware)', 'Hiring the first US sales and marketing leaders', 'Coating takes time: rounds can take months to close'] },
+    redline: { name: 'The Red Line', tag: 'The wall around the world', tagline: 'The home market ends here.',
+      lore: 'A continent that circles the entire world and splits the Grand Line into Paradise and the New World. Ships cross it over the top through Mary Geoise, or beneath it via Fish-Man Island.',
+      desc: 'Israel is a small market, so every startup hits this wall. After Series A the company has to cross into global markets: R&D usually stays home, while headquarters and sales move abroad.',
+      points: ['A classic pattern: HQ and sales in New York or the Bay Area, engineering in Tel Aviv', 'Many founders set up a US parent company early to make the crossing easier', 'The Red Line appears twice on this chart: Reverse Mountain and Mary Geoise sit on the same wall'] },
+    marijoa: { name: 'Mary Geoise', tag: 'Over the wall', tagline: 'The road over the top belongs to the world’s nobility.',
+      lore: 'The Holy Land on top of the Red Line, home of the World Nobles. Ordinary pirates may not pass this way.',
+      desc: 'Up here live the giants of Big Tech. Few startups cross the wall on their own here — but some are lifted over it: bought early by a giant for their team or technology, before ever sailing the New World. A quicker, safer landing, but not the full voyage.',
+      points: ['Early acquisitions and “acqui-hires” of young teams', 'Many Israeli R&D centres of global giants began as an acquired startup', 'Founders often stay on to lead the local centre'] },
+    fishman: { name: 'Fish-Man Island', tag: '10,000 m beneath the Red Line', tagline: 'The dive most crews take.',
+      lore: 'An island 10,000 metres below the surface, beneath the Red Line. Coated ships sink down to it and rise again on the New World side.',
+      desc: 'The dive into the US market. It is dark, the pressure is enormous and you can’t see the surface: a new office, new hires, customers who have never heard of you, and a founder commuting across a seven-to-ten-hour time difference.',
+      points: ['Headquarters in New York, Boston or the Bay Area; R&D stays in Israel', 'A first non-Israeli leadership team', 'Some ships never resurface — the crossing is where many stall'] },
+    newworld: { name: 'The New World', tag: 'Second half of the Grand Line', tagline: 'Three needles, wilder weather, and Emperors.',
+      lore: 'The second half of the Grand Line. Its Log Pose has three needles, the weather is wilder, and the seas are ruled by the Four Emperors.',
+      desc: 'Global growth. Several paths open at once — new markets, new products, acquisitions — and each needle points somewhere riskier than the last. The Emperors are the incumbents and Big Tech giants who rule each market: they compete with you, partner with you, and may buy you.',
+      points: ['Growth rounds from international funds', 'Competing — and partnering — with global giants', 'Choosing a needle: a new market, a new product or an acquisition'] },
+    laughtale: { name: 'Laughtale', tag: 'The final island', tagline: 'The One Piece is the Exit.',
+      lore: 'The last island of the Grand Line, found only by reading all four Road Poneglyphs. The One Piece lies there.',
+      desc: 'Every route ends here. Some crews land by acquisition, some by ringing a stock-exchange bell, some by selling a stake to a larger fund. Then the treasure goes back to sea: founders and early employees become angels, mentors and second-time captains — and sail into South Blue to climb Reverse Mountain again.',
+      points: ['Acquisition (M&A) — by number of deals, the most common Israeli exit', 'IPO — most often on Nasdaq or the NYSE, sometimes dual-listed in Tel Aviv', 'Secondary or buyout — shares change hands while the company sails on', 'The loop — exit money and experience seed the next generation'],
+      legends: ['Wiz → Google ($32B deal, announced 2025)', 'CyberArk → Palo Alto Networks (~$25B deal, announced 2025)', 'Mobileye → Intel ($15.3B, 2017)', 'Mellanox → Nvidia (~$7B, 2020)'] }
   },
 
-  redline: {
-    name: 'The Red Line',
-    tagline: 'The home market ends here.',
-    desc: 'Israel is a small market, so somewhere between Series A and growth nearly every startup has to cross this wall: open a US or European base, hire a go-to-market team abroad, and often relocate a founder. R&D usually stays in Israel. There are only seven gates through the Red Line — one per route — and many ships never make it past.',
-    points: [
-      'A classic pattern: headquarters and sales in New York or the Bay Area, engineering in Tel Aviv.',
-      'Many founders set up a US parent company early to make this crossing easier.',
-      'Beyond it lies the New World: bigger rounds, international funds, and global competitors.'
-    ]
-  },
+  poneglyphLore: 'Indestructible red stone blocks. Only by reading all four Road Poneglyphs, scattered across the New World, can a crew find the way to Laughtale.',
+  poneglyphs: [
+    { name: 'Scale', title: 'The Scale Poneglyph', desc: 'Revenue big enough to matter to a buyer or a stock market.',
+      points: ['Software companies often wait for roughly $100M+ in annual recurring revenue before an IPO', 'Growth that stays strong at that size'] },
+    { name: 'Efficiency', title: 'The Efficiency Poneglyph', desc: 'Growth that does not burn the ship: a clear path to profit.',
+      points: ['The “Rule of 40”: growth rate plus profit margin of 40% or more', 'Healthy gross margins and cash discipline'] },
+    { name: 'Governance', title: 'The Governance Poneglyph', desc: 'The crew and controls a public company needs.',
+      points: ['Audited financials and strong internal controls', 'An independent board and an experienced finance team', 'Clean legal structure and clear ownership of IP'] },
+    { name: 'Moat', title: 'The Moat Poneglyph', desc: 'A position competitors can’t copy quickly.',
+      points: ['Category leadership and a brand buyers recognise', 'Data, network effects or deep technology', 'A strategic reason for a giant to pay a premium'] }
+  ],
 
-  exit: {
-    name: 'The Exit',
-    tagline: 'The treasure at the end of the line.',
-    desc: 'All seven routes end on the same island. Some crews arrive by acquisition, some by ringing a stock-exchange bell, and some by selling a stake to a private-equity fund. Whichever way they land, the treasure tends to go back to sea: founders and early employees become angels, mentors and second-time captains — and the voyage starts again at Reverse Mountain.',
-    points: [
-      'Acquisition (M&A) — by number of deals, the most common way Israeli startups exit.',
-      'IPO — most often on Nasdaq or the NYSE, sometimes dual-listed in Tel Aviv.',
-      'Secondary or buyout — founders and employees sell shares while the company sails on.',
-      'The loop — exit money and experience seed the next generation of startups.'
-    ],
-    legends: ['Wiz → Google ($32B deal, announced 2025)', 'CyberArk → Palo Alto Networks (~$25B deal, announced 2025)', 'Mobileye → Intel ($15.3B, 2017)', 'Mellanox → Nvidia (~$7B, 2020)']
-  },
+  /* Chart key: lore → startup meaning → where it is on the map. */
+  key: [
+    ['The Four Blues', 'Where founders come from', 'blue-east'],
+    ['Reverse Mountain', 'The leap: committing to found', 'start'],
+    ['Twin Capes lighthouse', 'Incubators, accelerators, grants', 'twin'],
+    ['The Calm Belt', 'The valley of death', 'calm'],
+    ['The seven routes', 'Seven startup sectors', 'paradise'],
+    ['Paradise', 'Home waters: Pre-Seed to Series A', 'paradise'],
+    ['Log Pose', 'Your next milestone — one needle, then three', 'paradise'],
+    ['Sabaody Archipelago', 'Series B: coating the ship for the crossing', 'sabaody'],
+    ['The Red Line', 'The wall of a small home market', 'redline'],
+    ['Fish-Man Island', 'The dive into the US market', 'fishman'],
+    ['Mary Geoise', 'An early sale to a tech giant', 'marijoa'],
+    ['The New World', 'Global growth', 'newworld'],
+    ['The Four Emperors', 'Big Tech incumbents', 'newworld'],
+    ['Road Poneglyphs', 'Four proofs buyers and markets need', 'pg-0'],
+    ['Laughtale & the One Piece', 'The Exit', 'laughtale']
+  ],
 
   lanes: [
     {
